@@ -7,33 +7,30 @@ st.set_page_config(page_title="Visualizador de Laberinto", layout="centered")
 
 st.title("Visualizador de Algoritmo de Búsqueda en Laberinto")
 
-# --- FUNCIÓN DE RENDERIZADO IDÉNTICA A TU IMAGEN ---
+# --- FUNCIÓN DE RENDERIZADO (Estilo exacto) ---
 def render_maze(maze, path=None):
     if path is None:
         path = []
     
-    # Convertimos el camino a un set para verificar rápido
     path_set = set(path)
     
     display_maze = []
     for r_idx, row in enumerate(maze):
         display_row = []
         for c_idx, col in enumerate(row):
-            # Lógica exacta de tus emojis originales
             if (r_idx, c_idx) == START:
-                display_row.append("🚀")  # Inicio (Cohete)
+                display_row.append("🚀")
             elif (r_idx, c_idx) == END:
-                display_row.append("🏁")  # Fin (Bandera)
+                display_row.append("🏁")
             elif (r_idx, c_idx) in path_set:
-                display_row.append("🔹")  # Camino resuelto (Rombo azul pequeño)
+                display_row.append("🔹")
             elif col == 1:
-                display_row.append("⬛")  # Muro (Cuadro negro grande)
+                display_row.append("⬛")
             else:
-                display_row.append("⬜")  # Camino libre (Cuadro blanco grande)
+                display_row.append("⬜")
         
         display_maze.append("".join(display_row))
     
-    # Usamos un estilo de línea ajustado para que los cuadros se vean pegados como en la imagen
     st.markdown(
         f"""
         <div style="line-height: 1.0; font-size: 20px; text-align: center; white-space: nowrap;">
@@ -52,20 +49,32 @@ solve_button = st.sidebar.button("Resolver Laberinto")
 if solve_button:
     path = None
     
-    # Ejecutamos el algoritmo seleccionado
+    # 1. Medir tiempo de inicio
+    start_time = time.perf_counter()
+    
+    # 2. Ejecutar algoritmo
     if "BFS" in algorithm:
         path = solve_maze_bfs(MAZE, START, END)
     elif "DFS" in algorithm:
         path = solve_maze_dfs(MAZE, START, END)
     elif "A*" in algorithm:
         path = solve_maze_astar(MAZE, START, END)
+    
+    # 3. Medir tiempo final
+    end_time = time.perf_counter()
+    elapsed_time = (end_time - start_time) * 1000  # Convertir a milisegundos
 
     if path:
         st.success(f"¡Camino encontrado con {algorithm}!")
+        
+        # 4. Mostrar métricas (Tiempo y Pasos)
+        col1, col2 = st.columns(2)
+        col1.metric("⏱️ Tiempo de ejecución", f"{elapsed_time:.4f} ms")
+        col2.metric("👣 Pasos totales", len(path))
+        
         render_maze(MAZE, path)
     else:
         st.error("No se encontró un camino.")
         render_maze(MAZE)
 else:
-    # Estado inicial (sin resolver)
     render_maze(MAZE)
