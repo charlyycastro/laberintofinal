@@ -1,99 +1,71 @@
 import streamlit as st
 import time
-# IMPORTANTE: Importamos desde maze_solver, donde pusimos la lógica
 from maze_solver import MAZE, START, END, solve_maze_bfs, solve_maze_dfs, solve_maze_astar
 
-st.set_page_config(page_title="Maze Solver Retro", layout="centered")
+# Configuración de página simple
+st.set_page_config(page_title="Visualizador de Laberinto", layout="centered")
 
-st.title("🏰 Solucionador de Laberinto")
-st.markdown("Estilo clásico con visualización de bloques.")
+st.title("Visualizador de Algoritmo de Búsqueda en Laberinto")
 
-# --- FUNCIÓN DE RENDERIZADO (TEXTO/EMOJIS) ---
+# --- FUNCIÓN DE RENDERIZADO IDÉNTICA A TU IMAGEN ---
 def render_maze(maze, path=None):
     if path is None:
         path = []
-    path_set = set(path) # Convertimos a set para búsqueda rápida
     
-    rows = len(maze)
-    cols = len(maze[0])
+    # Convertimos el camino a un set para verificar rápido
+    path_set = set(path)
     
-    html_maze = []
-    
-    # Construimos el laberinto fila por fila
-    for r in range(rows):
-        row_str = ""
-        for c in range(cols):
-            # Prioridad de íconos
-            if (r, c) == START:
-                symbol = "🟢" # Inicio
-            elif (r, c) == END:
-                symbol = "🏁" # Fin
-            elif (r, c) in path_set:
-                symbol = "🟦" # Camino resuelto
-            elif maze[r][c] == 1:
-                symbol = "⬛" # Pared
+    display_maze = []
+    for r_idx, row in enumerate(maze):
+        display_row = []
+        for c_idx, col in enumerate(row):
+            # Lógica exacta de tus emojis originales
+            if (r_idx, c_idx) == START:
+                display_row.append("🚀")  # Inicio (Cohete)
+            elif (r_idx, c_idx) == END:
+                display_row.append("🏁")  # Fin (Bandera)
+            elif (r_idx, c_idx) in path_set:
+                display_row.append("🔹")  # Camino resuelto (Rombo azul pequeño)
+            elif col == 1:
+                display_row.append("⬛")  # Muro (Cuadro negro grande)
             else:
-                symbol = "⬜" # Pasillo vacío
-            
-            row_str += symbol
-        html_maze.append(row_str)
+                display_row.append("⬜")  # Camino libre (Cuadro blanco grande)
+        
+        display_maze.append("".join(display_row))
     
-    # CSS ajustado para compactar las líneas de un laberinto grande
+    # Usamos un estilo de línea ajustado para que los cuadros se vean pegados como en la imagen
     st.markdown(
         f"""
-        <div style="
-            font-family: monospace; 
-            line-height: 12px; 
-            font-size: 12px; 
-            letter-spacing: 0px; 
-            white-space: pre; 
-            text-align: center;
-            border: 4px solid #333;
-            padding: 10px;
-            background-color: #222;
-            color: white;
-            display: inline-block;
-        ">
-            {'<br>'.join(html_maze)}
+        <div style="line-height: 1.0; font-size: 20px; text-align: center; white-space: nowrap;">
+            {'<br>'.join(display_maze)}
         </div>
         """, 
         unsafe_allow_html=True
     )
 
-# --- BARRA LATERAL ---
+# --- SIDEBAR DE OPCIONES ---
 st.sidebar.header("Opciones")
-algorithm = st.sidebar.selectbox("Algoritmo", ["BFS (Amplitud)", "DFS (Profundidad)", "A* (A-Star)"])
-solve_btn = st.sidebar.button("Resolver")
+algorithm = st.sidebar.selectbox("Selecciona el algoritmo", ["BFS (Amplitud)", "DFS (Profundidad)", "A* (A-Star)"])
+solve_button = st.sidebar.button("Resolver Laberinto")
 
 # --- LÓGICA PRINCIPAL ---
-if not solve_btn:
-    st.subheader("Laberinto Inicial")
-    render_maze(MAZE)
-else:
-    st.subheader(f"Resultado: {algorithm}")
-    
+if solve_button:
     path = None
-    start_time = time.perf_counter()
     
-    # Ejecutar algoritmo seleccionado
+    # Ejecutamos el algoritmo seleccionado
     if "BFS" in algorithm:
         path = solve_maze_bfs(MAZE, START, END)
     elif "DFS" in algorithm:
         path = solve_maze_dfs(MAZE, START, END)
     elif "A*" in algorithm:
         path = solve_maze_astar(MAZE, START, END)
-        
-    end_time = time.perf_counter()
-    elapsed_time = (end_time - start_time) * 1000
 
     if path:
+        st.success(f"¡Camino encontrado con {algorithm}!")
         render_maze(MAZE, path)
-        st.success(f"¡Camino encontrado!")
-        
-        # Métricas
-        c1, c2 = st.columns(2)
-        c1.metric("Tiempo", f"{elapsed_time:.4f} ms")
-        c2.metric("Pasos", len(path))
     else:
-        st.error("No se encontró solución.")
+        st.error("No se encontró un camino.")
         render_maze(MAZE)
+else:
+    # Estado inicial (sin resolver)
+    render_maze(MAZE)
